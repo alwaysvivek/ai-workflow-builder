@@ -1,0 +1,9 @@
+flask
+flask-cors
+flask-limiter
+flask-sqlalchemy
+sqlalchemy
+groq
+python-dotenv
+pydantic>=2.7.0
+pytest
