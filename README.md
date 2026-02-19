@@ -65,6 +65,18 @@ npm run dev
 ```
 Access: `http://localhost:5173`
 
+## Technical API Reference
+
+The backend exposes a REST API (prefixed with `/api`) to support the unified React frontend and external observability.
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/health` | `GET` | System health check (Database connectivity). |
+| `/api/validate-key` | `POST` | Validates a Groq API Key against the upstream provider. |
+| `/api/workflows` | `POST` | Creates a new workflow template. |
+| `/api/workflows/run/sync` | `POST` | Executes a workflow synchronously with Pydantic validation. |
+| `/api/runs` | `GET` | Retrieves the latest workflow execution history. |
+
 ## Extension Approach
 The system is designed to be easily extensible without modifying core logic:
 - **Adding New Actions**: Define a new `ActionType` enum in `backend/core/prompts.py` and add a corresponding Python string template. No other backend changes are needed.
@@ -85,7 +97,7 @@ The assessment requested Flask. To keep the execution logic lean and predictable
 - **CORS**: Configured to allow traffic from any origin (`*`) to simplify local testing and assessment review. In a real production environment, this would be restricted to the frontend domain.
 
 ### Dependencies
-Dependencies in `requirements.txt` are intentionally left unpinned (e.g., `flask` instead of `flask==3.0.0`) to ensure compatibility with the reviewer's Python environment and to avoid locking to old versions during this assessment phase.
+Dependencies in `requirements.txt` are **strictly pinned** (e.g., `Flask==3.1.2`) to ensure 100% reproducibility and to prevent "it works on my machine" issues across different reviewer environments.
 
 ## Testing
 
