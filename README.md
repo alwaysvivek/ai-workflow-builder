@@ -70,7 +70,7 @@ The system is designed to be easily extensible without modifying core logic:
 I chose **SQLite** for this submission to ensure the project is "self-contained" and easy to run without setting up a heavy DB container. For a production app with high concurrency, I would switch to PostgreSQL (the code is already using SQLAlchemy, so this switch is trivial).
 
 ### Flask vs FastAPI
-The assessment requested Flask. Since Jinja2 is the default engine for Flask, it is installed, but for these specific LLM prompts, I used standard **Python String Formatting** (.format) to keep the execution logic lean and predictable.
+The assessment requested Flask. To keep the execution logic lean and predictable, I used standard **Python String Formatting** (.format) for managing LLM prompts, ensuring low overhead and high readability.
 
 ### Security
 - **Inputs**: All text inputs are sanitized (HTML stripped) before processing.
