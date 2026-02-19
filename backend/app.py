@@ -27,6 +27,8 @@ from config import config
 from blueprints.system import system_bp
 from blueprints.workflows import workflows_bp
 from core.logging_config import setup_logging
+import os
+from flask import send_from_directory
 
 def create_app(config_class=config):
     # Initialize structured logging first
@@ -38,15 +40,32 @@ def create_app(config_class=config):
     # Initialize extensions
     db.init_app(app)
     limiter.init_app(app)
-    CORS(app, resources={r"/*": {"origins": "*"}}) # Configure more strictly for prod if needed
+    CORS(app) # Broad CORS for the API layer
+
+    # Setup static folder for React
+    # In Docker, we copy dist to /app/static. Locally, we look at ../frontend/dist
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    if not os.path.exists(static_dir):
+         static_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
     
-    # Register blueprints
-    app.register_blueprint(system_bp)
-    app.register_blueprint(workflows_bp)
+    app.static_folder = static_dir
+    
+    # Register blueprints with /api prefix
+    app.register_blueprint(system_bp, url_prefix='/api')
+    app.register_blueprint(workflows_bp, url_prefix='/api')
     
     # Create DB tables within app context
     with app.app_context():
         db.create_all()
+
+    # Serve React App
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve(path):
+        if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        else:
+            return send_from_directory(app.static_folder, 'index.html')
         
     @app.errorhandler(404)
     def not_found(e):
