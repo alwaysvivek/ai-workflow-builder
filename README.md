@@ -38,12 +38,6 @@ The easiest way to run the application is with Docker Compose.
    - Frontend: [http://localhost:3000](http://localhost:3000)
    - Backend API: [http://localhost:5001](http://localhost:5001)
 
-## Deployment (Cloud)
-
-For cloud deployment (e.g., Render), use the root **Dockerfile**.
-1. **New Web Service**: Connect your repo.
-2. **Environment Variables**: Add `GROQ_API_KEY`.
-3. **Persitence**: If using SQLite, add a **Persistent Disk** mounted at `/app`. (Note: The default `DATABASE_URL` is relative, so it will stay inside the container unless you provide an absolute path).
 
 ## Quick Start (Local Dev)
 
@@ -55,7 +49,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 python3 app.py
 ```
-Checks: `http://localhost:5001/health`
+Checks: `http://localhost:5001/api/health`
 
 ### Frontend
 ```bash
@@ -122,29 +116,16 @@ python3 -m pytest
 
 ---
 
-## Rubric Mapping & Engineering Rigor
+## Engineering Rigor
 
-This section explicitly maps the system's design to the **"Better Software"** evaluation criteria.
+This system was intentionally designed to stay understandable and correct as it evolves:
 
-### 1. Structure & Simplicity
-- **Factory Pattern**: The backend uses `create_app` (Application Factory) to ensure clean initialization and prevent global state issues.
-- **Blueprint Isolation**: Routes are separated from core business logic (located in `backend/core/`), making the system predictable and easy to navigate.
-- **Minimalist Frontend**: Built with pure Tailwind and Vite, avoiding heavy state-management libraries (Redux/Zustand) where simple React hooks suffice.
+- Clear boundaries: Flask blueprints isolate routing; core/ contains all business logic.
 
-### 2. Correctness & Interface Safety
-- **Strict Typing**: Every LLM interaction is wrapped in a **Pydantic Model**. If the AI returns a "Cleaned Text" that doesn't fit the `CleanOutput` schema, the system catches it at the boundary rather than allowing a malformed state to propagate.
-- **Input Sanitization**: All user-provided text is sanitized using `bleach` and custom regex cleaners before being passed to the LLM or stored, preventing injection risks.
-- **Schema Validation**: The API uses standard JSON Schema validation (via Pydantic) for all POST requests, returning human-readable 400 errors for invalid payloads.
+- Strong interfaces: All external inputs and LLM outputs are validated with Pydantic to prevent invalid states.
 
-### 3. Change Resilience
-- **Enum-Driven Logic**: Action types (Summarize, Clean, etc.) are defined in a single `ActionType` Enum. Adding a new behavior requires zero changes to the routing or UI logic—only a new prompt template.
-- **Dialect Agnostic DB**: SQLAlchemy is used exclusively. Transitioning from SQLite to PostgreSQL is an environment variable change (`DATABASE_URL`), requiring no code modifications.
+- Change resilience: Enum-driven action types and SQLAlchemy abstractions ensure new features don’t cause widespread impact.
 
-### 4. Observability & Verification
-- **Structured Logging**: Instead of `print()`, the system uses a **JSON Logger**. Each LLM request is logged with its duration, status, and input length, making production debugging trivial.
-- **Health Monitoring**: A dedicated `/api/health` endpoint verifies both the web server and database connectivity.
-- **Automated Testing**: Comprehensive `pytest` suite covers API endpoints and core logic, ensuring that new changes don't cause widespread impact.
+- Observability by default: Structured JSON logs, run history, and a health endpoint make failures diagnosable.
 
-### 5. AI Guidance & Integrity
-- **Human-in-the-Loop**: AI was used as a productivity accelerator, but every Pydantic model and prompt was manually tuned.
-- **Guardrail Files**: Strict constraints are documented in `ai_guidance/rules.md` to ensure any future AI-assisted development adheres to the system's architectural boundaries.
+- Constrained AI usage: AI assistance was guided by explicit rules (ai_guidance/) and all generated code was reviewed and hardened.
