@@ -67,7 +67,7 @@ Access: `http://localhost:5173`
 
 ## Technical API Reference
 
-The backend exposes a REST API (prefixed with `/api`) to support the unified React frontend and external observability.
+The backend exposes a REST API (prefixed with `/api`) to support the unified React frontend and external observability. A full **OpenAPI Specification** is available in [openapi.json](./openapi.json).
 
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
@@ -97,7 +97,20 @@ The assessment requested Flask. To keep the execution logic lean and predictable
 - **CORS**: Configured to allow traffic from any origin (`*`) to simplify local testing and assessment review. In a real production environment, this would be restricted to the frontend domain.
 
 ### Dependencies
-Dependencies in `requirements.txt` are **strictly pinned** (e.g., `Flask==3.1.2`) to ensure 100% reproducibility and to prevent "it works on my machine" issues across different reviewer environments.
+Dependencies in `requirements.txt` are **strictly pinned** (e.g., `Flask==3.1.2`) to ensure 100% reproducibility across different reviewer environments.
+
+## Engineering Weaknesses & Scale Path
+
+In the spirit of "Communication" and "Trade-offs," here are the known weaknesses of the current implementation and how they would be addressed in a production environment:
+
+1.  **SQLite Concurrency**: SQLite is not suitable for high-concurrency writes.
+    -   *Scale Path*: Use **PostgreSQL** in production. The code uses SQLAlchemy, so this is an environment variable change away.
+2.  **Synchronous Processing**: Workflow execution currently blocks the Flask worker. For long-running chains, this will lead to timeouts.
+    -   *Scale Path*: Offload execution to **Celery/Redis** workers and use WebSockets or polling to notify the frontend of completion.
+3.  **In-Memory Rate Limiting**: Limiters are currently in-memory and will reset on container restart.
+    -   *Scale Path*: Use a persistent **Redis** store for `Flask-Limiter`.
+4.  **Sync-over-Stream**: I intentionally chose atomic Pydantic validation over byte-by-byte streaming for this assessment to prioritize **Correctness** and **Simplicity**.
+    -   *Scale Path*: Implement iterative JSON parsing (e.g., `ijson`) to support true partial streaming if "real-time" feel becomes the primary product requirement.
 
 ## Testing
 
