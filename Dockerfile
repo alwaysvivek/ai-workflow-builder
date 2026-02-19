@@ -44,5 +44,5 @@ ENV PORT=5001
 EXPOSE 5001
 
 # Run gunicorn
-# Note: Render provides the PORT env var, but we default to 5001
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "1", "--threads", "2", "--timeout", "300", "app:create_app()"]
+# Render provides the PORT env var, we use a shell form to expand it
+CMD gunicorn --bind 0.0.0.0:${PORT:-5001} --workers 1 --threads 2 --timeout 300 "app:create_app()"

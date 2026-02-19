@@ -34,7 +34,13 @@ def create_app(config_class=config):
     # Initialize structured logging first
     setup_logging()
     
-    app = Flask(__name__)
+    # Setup static folder path
+    # In Docker, we copy dist to /app/static. Locally, we look at ../frontend/dist
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    if not os.path.exists(static_dir):
+         static_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
+
+    app = Flask(__name__, static_folder=static_dir, static_url_path='/')
     app.config.from_object(config_class)
     
     # Initialize extensions
@@ -42,14 +48,6 @@ def create_app(config_class=config):
     limiter.init_app(app)
     CORS(app) # Broad CORS for the API layer
 
-    # Setup static folder for React
-    # In Docker, we copy dist to /app/static. Locally, we look at ../frontend/dist
-    static_dir = os.path.join(os.path.dirname(__file__), 'static')
-    if not os.path.exists(static_dir):
-         static_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
-    
-    app.static_folder = static_dir
-    
     # Register blueprints with /api prefix
     app.register_blueprint(system_bp, url_prefix='/api')
     app.register_blueprint(workflows_bp, url_prefix='/api')
@@ -62,15 +60,19 @@ def create_app(config_class=config):
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
+        # 1. If the path exists in the static folder, serve it
         if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
-        else:
-            return send_from_directory(app.static_folder, 'index.html')
+        # 2. Otherwise, serve index.html for React Router to handle
+        return send_from_directory(app.static_folder, 'index.html')
         
     @app.errorhandler(404)
-    def not_found(e):
-        return {"error": "Not Found"}, 404
-
+    def handle_404(e):
+        # If an API call fails, return JSON. Otherwise, serve the SPA.
+        if request.path.startswith('/api/'):
+            return jsonify({"error": "API route not found"}), 404
+        return send_from_directory(app.static_folder, 'index.html')
+        
     @app.errorhandler(500)
     def internal_error(e):
         return {"error": "Internal Server Error"}, 500
