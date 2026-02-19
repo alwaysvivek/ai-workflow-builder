@@ -38,14 +38,12 @@ The easiest way to run the application is with Docker Compose.
    - Frontend: [http://localhost:3000](http://localhost:3000)
    - Backend API: [http://localhost:5001](http://localhost:5001)
 
-## Deployment (Render)
+## Deployment (Cloud)
 
-This project includes a `render.yaml` Blueprint for easy deployment.
-
-1. **New Private Service**: Go to Render Dashboard -> New -> Blueprints.
-2. **Connect Repo**: Connect this repository.
-3. **Approval**: Render will detect the Blueprint and set up both the Backend and Frontend with the correct paths and a persistent disk for SQLite.
-4. **Environment Variables**: After deployment, go to the Backend service settings and add your `GROQ_API_KEY`.
+For cloud deployment (e.g., Render), use the root **Dockerfile**.
+1. **New Web Service**: Connect your repo.
+2. **Environment Variables**: Add `GROQ_API_KEY`.
+3. **Persitence**: If using SQLite, add a **Persistent Disk** mounted at `/app`. (Note: The default `DATABASE_URL` is relative, so it will stay inside the container unless you provide an absolute path).
 
 ## Quick Start (Local Dev)
 

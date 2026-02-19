@@ -13,6 +13,7 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
         - VITE_GROQ_API_KEY=${GROQ_API_KEY}
     ports:
