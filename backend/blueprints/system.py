@@ -67,9 +67,7 @@ def get_runs():
                 "workflow_id": run.workflow_id,
                 "input_text": run.input_text,
                 "status": run.status,
-                "created_at": run.created_at.isoformat(),
-                "status": run.status,
-                "created_at": run.created_at.isoformat(),
+                "created_at": run.created_at.isoformat() + "Z",
                 # Include steps for details view
                 "step_runs": [{
                     "step": s.step_order,
