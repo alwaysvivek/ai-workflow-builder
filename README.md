@@ -85,16 +85,20 @@ The system is designed to be easily extensible without modifying core logic:
 
 ## Trade-offs & Decisions
 
-### SQLite vs PostgreSQL
-I chose **SQLite** for this submission to ensure the project is "self-contained" and easy to run without setting up a heavy DB container. For a production app with high concurrency, I would switch to PostgreSQL (the code is already using SQLAlchemy, so this switch is trivial).
+### 1. Deterministic & Correct (Pydantic Validation)
+I enforced strict **Pydantic JSON schemas** on all LLM outputs. The system dynamically injects JSON schemas into system prompts and validates the raw response using `model_validate_json`. This ensures the system remains correct as it evolves and prevents the UI from receiving malformed state.
 
-### Flask vs FastAPI
-The assessment requested Flask. To keep the execution logic lean and predictable, I used standard **Python String Formatting** (.format) for managing LLM prompts, ensuring low overhead and high readability.
+### 2. Architectural Decoupling (Prompts Registry)
+Prompt templates are decoupled from execution logic via a dedicated `backend/core/prompts.py` registry. This allows for rapid iteration of "Action" behavior (Clean, Summarize, etc.) without touching the core runtime, HTTP layer, or frontend components.
 
-### Security
-- **Inputs**: All text inputs are sanitized (HTML stripped) before processing.
-- **API Keys**: Groq API keys are passed via headers (`x-groq-api-key`) and validated against the Groq API before use. They are not stored in the database.
-- **CORS**: Configured to allow traffic from any origin (`*`) to simplify local testing and assessment review. In a real production environment, this would be restricted to the frontend domain.
+### 3. Ephemeral Security (BYOK)
+The application adopts a **Bring Your Own Key (BYOK)** model. Groq API keys are passed via requests headers (`x-groq-api-key`) and validated against the upstream provider before use. They are never persisted to the database, ensuring zero risk of key leakage from our infrastructure.
+
+### 4. Simplicity vs LangChain
+I deliberately chose standard **Python String Formatting** (.format) for managing LLM prompts instead of heavy orchestration libraries like LangChain. This ensures the execution logic remains lean, highly readable, and predictably deterministic for this assessment scope.
+
+### 5. SQLite vs PostgreSQL
+I chose **SQLite** for this submission to ensure the project is "self-contained" and has zero setup friction for reviewers. Since the application uses **SQLAlchemy**, migrating to PostgreSQL for high-concurrency production environments is a trivial configuration change.
 
 ### Dependencies
 Dependencies in `requirements.txt` are **strictly pinned** (e.g., `Flask==3.1.2`) to ensure 100% reproducibility across different reviewer environments.
