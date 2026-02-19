@@ -23,18 +23,18 @@ def runner(app):
     return app.test_cli_runner()
 
 def test_health_check(client):
-    response = client.get('/health')
+    response = client.get('/api/health')
     assert response.status_code == 200
     data = response.get_json()
     assert data['status'] == 'healthy'
     assert data['database'] == 'connected'
 
 def test_validate_key_missing(client):
-    response = client.post('/validate-key', json={})
+    response = client.post('/api/validate-key', json={})
     assert response.status_code == 400
 
 def test_validate_key_empty(client):
-    response = client.post('/validate-key', json={'api_key': '   '})
+    response = client.post('/api/validate-key', json={'api_key': '   '})
     assert response.status_code == 400
 
 def test_get_runs_empty(client):
@@ -42,7 +42,7 @@ def test_get_runs_empty(client):
     with client.application.app_context():
         db.create_all()
         
-    response = client.get('/runs')
+    response = client.get('/api/runs')
     assert response.status_code == 200
     data = response.get_json()
     assert isinstance(data, list)

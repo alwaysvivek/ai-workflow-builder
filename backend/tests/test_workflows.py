@@ -28,7 +28,7 @@ def test_create_workflow(client):
             {"action": "summarize", "params": {}}
         ]
     }
-    response = client.post('/workflows', json=payload)
+    response = client.post('/api/workflows', json=payload)
     assert response.status_code == 201
     data = response.get_json()
     assert data['name'] == "Test Workflow"
@@ -40,7 +40,7 @@ def test_create_workflow_invalid(client):
         "name": "Invalid"
         # Missing steps
     }
-    response = client.post('/workflows', json=payload)
+    response = client.post('/api/workflows', json=payload)
     assert response.status_code == 400
 
 def test_get_workflow(client):
@@ -50,11 +50,11 @@ def test_get_workflow(client):
         "description": "Desc",
         "steps": [{"action": "clean"}]
     }
-    create_resp = client.post('/workflows', json=payload)
+    create_resp = client.post('/api/workflows', json=payload)
     wf_id = create_resp.get_json()['id']
     
     # Get it
-    response = client.get(f'/workflows/{wf_id}')
+    response = client.get(f'/api/workflows/{wf_id}')
     assert response.status_code == 200
     data = response.get_json()
     assert data['name'] == "Test Retrieval"

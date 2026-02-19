@@ -20,7 +20,7 @@ Key Components:
 -   `extensions.py`: Singleton instances of DB and Limiter.
 -   `config.py`: Environment-based configuration.
 """
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from extensions import db, limiter
 from config import config
