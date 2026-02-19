@@ -1,7 +1,7 @@
 # ==========================================
 # Phase 1: Build the Frontend (React)
 # ==========================================
-FROM node:18-alpine as build-stage
+FROM node:20-alpine as build-stage
 
 WORKDIR /app
 COPY frontend/package*.json ./
@@ -33,15 +33,11 @@ RUN pip install gunicorn
 COPY backend/ .
 
 # Copy built frontend from Stage 1 to the backend's static folder
-# Note: app.py is configured to look for 'static' in its directory
 COPY --from=build-stage /app/dist /app/static
 
 # Environment variables
 ENV FLASK_APP=app.py
 ENV PYTHONUNBUFFERED=1
-ENV PORT=5001
-
-EXPOSE 5001
 
 # Run gunicorn
 # Render provides the PORT env var, we use a shell form to expand it

@@ -56,6 +56,11 @@ def create_app(config_class=config):
     with app.app_context():
         db.create_all()
 
+    # Dedicated Root Health Check for Render
+    @app.route('/health')
+    def root_health():
+        return jsonify({"status": "healthy"}), 200
+
     # Serve React App
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
