@@ -56,24 +56,25 @@ def create_app(config_class=config):
     with app.app_context():
         db.create_all()
 
-    # Dedicated Root Health Check for Render
-    @app.route('/health')
-    def root_health():
-        return jsonify({"status": "healthy"}), 200
-
     # Serve React App
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
-        # 1. If the path exists in the static folder, serve it
+        # 1. DO NOT handle anything that looks like an API call (starts with api/)
+        # This allows Blueprints to handle those routes properly.
+        if path.startswith('api/'):
+            return {"error": "API route not found"}, 404
+
+        # 2. If the path exists in the static folder, serve it
         if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
-        # 2. Otherwise, serve index.html for React Router to handle
+        
+        # 3. Otherwise, serve index.html for React Router to handle
+        # This covers our home page and status page
         return send_from_directory(app.static_folder, 'index.html')
         
     @app.errorhandler(404)
     def handle_404(e):
-        # If an API call fails, return JSON. Otherwise, serve the SPA.
         if request.path.startswith('/api/'):
             return jsonify({"error": "API route not found"}), 404
         return send_from_directory(app.static_folder, 'index.html')

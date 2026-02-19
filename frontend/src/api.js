@@ -2,8 +2,9 @@ import axios from 'axios';
 
 // Create an Axios instance with default configuration
 const api = axios.create({
-    // Use relative path in production (unified), or dev server in development
-    baseURL: import.meta.env.DEV ? 'http://localhost:5001/api' : '/api',
+    // In production (Render/Unified), we use relative /api
+    // In development (Vite 5173), we hit the backend directly on 5001
+    baseURL: import.meta.env.PROD ? '/api' : 'http://localhost:5001/api',
     headers: {
         'Content-Type': 'application/json',
     },
