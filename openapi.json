@@ -105,10 +105,43 @@
                 }
             }
         },
-        "/workflows/run/sync": {
+        "/workflows/{workflow_id}": {
+            "get": {
+                "summary": "Get Workflow Details",
+                "parameters": [
+                    {
+                        "name": "workflow_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/workflows/{workflow_id}/run": {
             "post": {
                 "summary": "Execute Workflow Synchronously",
                 "parameters": [
+                    {
+                        "name": "workflow_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "x-groq-api-key",
                         "in": "header",
@@ -124,17 +157,40 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "workflow_id": {
-                                        "type": "string"
-                                    },
                                     "input_text": {
                                         "type": "string"
                                     }
-                                }
+                                },
+                                "required": [
+                                    "input_text"
+                                ]
                             }
                         }
                     }
                 },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Invalid API Key"
+                    }
+                }
+            }
+        },
+        "/runs": {
+            "get": {
+                "summary": "Get Run History",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 5
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success"
