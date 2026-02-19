@@ -1,0 +1,31 @@
+services:
+  # Backend Service
+  - type: web
+    name: workflow-builder-backend
+    env: docker
+    dockerContext: backend
+    dockerfilePath: Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////opt/render/project/data/workflow_builder.db
+      - key: GROQ_API_KEY
+        sync: false # User will set this in Render UI
+      - key: SECRET_KEY
+        generateValue: true
+    disk:
+      name: workflow-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1
+
+  # Frontend Service
+  - type: web
+    name: workflow-builder-frontend
+    env: docker
+    dockerContext: frontend
+    dockerfilePath: Dockerfile
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: https://workflow-builder-backend.onrender.com # Change this if your backend name differs
