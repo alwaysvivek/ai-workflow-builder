@@ -12,26 +12,27 @@
  */
 import React, { useEffect, useState } from 'react';
 import api from '../api';
-import { Clock, ExternalLink, RefreshCw } from 'lucide-react';
+import { Clock, ExternalLink, RefreshCw, CheckCircle, XCircle, ShieldCheck } from 'lucide-react';
 
-const RunHistory = () => {
+const RunHistory = ({ health, onRefreshHealth }) => {
     const [runs, setRuns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [lastSynced, setLastSynced] = useState(new Date());
 
     const [selectedRun, setSelectedRun] = useState(null);
 
-    const fetchHistory = async () => {
-        setLoading(true);
+    const fetchHistory = async (isAuto = false) => {
+        if (!isAuto) setLoading(true);
         setError(null);
         try {
-            // Limit to 10 latest runs
             const res = await api.get('/runs?limit=10');
             setRuns(res.data);
+            setLastSynced(new Date());
         } catch (err) {
             setError(err.message || 'Failed to fetch history');
         } finally {
-            setLoading(false);
+            if (!isAuto) setLoading(false);
         }
     };
 
@@ -49,22 +50,68 @@ const RunHistory = () => {
 
     useEffect(() => {
         fetchHistory();
+        const interval = setInterval(() => {
+            fetchHistory(true);
+            if (onRefreshHealth) onRefreshHealth();
+        }, 30000); // 30s auto-refresh
+        return () => clearInterval(interval);
     }, []);
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <Clock className="w-6 h-6 text-indigo-600" />
-                    Run History
-                </h2>
-                <button
-                    onClick={fetchHistory}
-                    className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition"
-                    disabled={loading}
-                >
-                    <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                </button>
+        <div className="max-w-4xl mx-auto space-y-8">
+            {/* Header & Sync Status */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <Clock className="w-6 h-6 text-indigo-600" />
+                        Activity Hub
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">Monitor system health and execution history.</p>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${loading ? 'bg-indigo-500 animate-spin' : 'bg-green-500'}`}></div>
+                        <span className="text-xs font-medium text-gray-600">
+                            {loading ? 'Syncing...' : `Last synced ${lastSynced.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
+                        </span>
+                    </div>
+                    <button
+                        onClick={() => { fetchHistory(); if (onRefreshHealth) onRefreshHealth(); }}
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-indigo-600"
+                        title="Force Refresh"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Health Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${health?.status === 'healthy' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                            <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Backend API</p>
+                            <p className="text-sm font-semibold text-gray-900">{health?.status === 'healthy' ? 'Operational' : 'Unhealthy'}</p>
+                        </div>
+                    </div>
+                    {health?.status === 'healthy' ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
+                </div>
+
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${health?.database === 'connected' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                            <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Database</p>
+                            <p className="text-sm font-semibold text-gray-900">{health?.database === 'connected' ? 'Connected' : 'Disconnected'}</p>
+                        </div>
+                    </div>
+                    {health?.database === 'connected' ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
+                </div>
             </div>
 
             {error && (

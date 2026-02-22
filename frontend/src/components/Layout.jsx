@@ -1,11 +1,10 @@
 import React from 'react';
 import { Activity, BookOpen, Clock, HeartPulse } from 'lucide-react';
 
-const Layout = ({ children, activeTab, setActiveTab }) => {
+const Layout = ({ children, activeTab, setActiveTab, health }) => {
     const tabs = [
         { id: 'builder', label: 'Builder', icon: Activity },
-        { id: 'history', label: 'History', icon: Clock },
-        { id: 'status', label: 'Status', icon: HeartPulse },
+        { id: 'history', label: 'Activity', icon: Clock },
     ];
 
     return (
@@ -19,6 +18,14 @@ const Layout = ({ children, activeTab, setActiveTab }) => {
                         <h1 className="text-xl font-bold text-gray-900 tracking-tight">
                             Workflow Builder
                         </h1>
+                        {health && (
+                            <div className="flex items-center gap-1.5 ml-4 px-2 py-1 bg-gray-50 rounded-full border border-gray-100">
+                                <span className={`w-2 h-2 rounded-full ${health.status === 'healthy' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                                    {health.status === 'healthy' ? 'Healthy' : 'Error'}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     <nav className="flex gap-1 bg-gray-100 p-1 rounded-lg overflow-x-auto">
