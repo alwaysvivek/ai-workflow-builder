@@ -32,7 +32,6 @@ const AVAILABLE_ACTIONS = [
 ];
 
 const WorkflowBuilder = ({ apiKey, setApiKey }) => {
-    const [name, setName] = useState('My Workflow');
     const [steps, setSteps] = useState([{ action: 'clean' }]);
     const [inputText, setInputText] = useState('');
 
@@ -64,13 +63,19 @@ const WorkflowBuilder = ({ apiKey, setApiKey }) => {
         const template = PREDEFINED_TEMPLATES[templateKey];
         if (template) {
             setSteps(template.steps.map(action => ({ action })));
-            setName(template.label);
         }
     };
 
     const handleRun = () => {
         if (!inputText.trim()) return alert("Please enter some input text.");
-        executeWorkflow(name, steps, inputText, apiKey);
+
+        // Use template label if matched, otherwise generic "Custom Workflow"
+        const activeTemplate = Object.values(PREDEFINED_TEMPLATES).find(
+            t => JSON.stringify(t.steps) === JSON.stringify(steps.map(s => s.action))
+        );
+        const autoName = activeTemplate ? activeTemplate.label : "Custom Workflow";
+
+        executeWorkflow(autoName, steps, inputText, apiKey);
     };
 
     return (
@@ -93,18 +98,8 @@ const WorkflowBuilder = ({ apiKey, setApiKey }) => {
                     {!apiKey && <p className="text-xs text-amber-600 mt-2">Required for execution.</p>}
                 </div>
 
-                {/* Workflow Config */}
+                {/* Workflow Config Wrapper */}
                 <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Workflow Name</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                        />
-                    </div>
-
                     <div className="space-y-3 mb-6">
                         <label className="block text-sm font-medium text-gray-700">Steps Pipeline</label>
                         {steps.map((step, idx) => (
